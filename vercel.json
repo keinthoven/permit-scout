@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/recgov/:path*",
+      "destination": "https://www.recreation.gov/:path*"
+    },
+    {
+      "source": "/ridb/:path*",
+      "destination": "https://ridb.recreation.gov/:path*"
+    }
+  ]
+}
