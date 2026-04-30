@@ -1,0 +1,17 @@
+# --- Secrets & local environment (keys live here locally; never commit this file) ---
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# --- Dependencies ---
+node_modules/
+
+# --- Build output (Vite may inline VITE_* vars from your machine into dist/) ---
+dist/
+.vite/
+
+# --- Logs & OS ---
+*.log
+.DS_Store
