@@ -99,6 +99,7 @@ export default function TrailheadGrid({
               division={zone}
               groupSize={groupSize}
               permitId={permitId}
+              selectedDate={selectedDate}
               imageUrl={imageUrls.length > 0 ? imageUrls[i % imageUrls.length] : null}
               gradientIndex={i}
             />

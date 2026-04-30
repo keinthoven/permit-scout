@@ -35,11 +35,11 @@ function Badge({ remaining, total, groupSize }) {
   )
 }
 
-export default function TrailheadCard({ division, groupSize, permitId, imageUrl, gradientIndex }) {
+export default function TrailheadCard({ division, groupSize, permitId, selectedDate, imageUrl, gradientIndex }) {
   const { name, description, remaining, total } = division
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length]
   const isFull = remaining === 0
-  const bookingUrl = `https://www.recreation.gov/permits/${permitId}/registration/detailed-availability?type=permit`
+  const bookingUrl = `https://www.recreation.gov/permits/${permitId}/registration/detailed-availability?type=permit&date=${selectedDate}`
 
   return (
     <div
