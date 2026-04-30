@@ -15,3 +15,6 @@ dist/
 # --- Logs & OS ---
 *.log
 .DS_Store
+
+# Vercel CLI (`vercel link`) — do not commit
+.vercel
