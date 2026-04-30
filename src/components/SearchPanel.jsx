@@ -17,7 +17,7 @@ export default function SearchPanel({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
       <h2 className="text-base font-semibold text-stone-700 mb-4">Find Available Permits</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
 
         {/* Permit ID */}
         <div className="sm:col-span-1">
