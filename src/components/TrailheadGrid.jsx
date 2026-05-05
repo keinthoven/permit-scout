@@ -9,6 +9,8 @@ export default function TrailheadGrid({
   selectedDate,
   groupSize,
   permitId,
+  mapImage,
+  mapEmbed,
 }) {
   const imageUrls = useMemo(
     () =>
@@ -82,6 +84,27 @@ export default function TrailheadGrid({
           </span>
         </div>
       </div>
+
+      {/* Zone map (only for presets that include one). Interactive embed
+          takes precedence over static image. */}
+      {mapEmbed ? (
+        <div className="mb-8 rounded-2xl overflow-hidden border border-stone-200 bg-white shadow-sm">
+          <iframe
+            src={mapEmbed}
+            title={`${permitName || 'Permit'} zone map`}
+            className="w-full block aspect-[16/10]"
+            loading="lazy"
+          />
+        </div>
+      ) : mapImage ? (
+        <div className="mb-8 rounded-2xl overflow-hidden border border-stone-200 bg-white shadow-sm">
+          <img
+            src={mapImage}
+            alt={`${permitName || 'Permit'} zone map`}
+            className="w-full h-auto block"
+          />
+        </div>
+      ) : null}
 
       {zones.length === 0 ? (
         <div className="text-center py-20 text-stone-400">

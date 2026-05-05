@@ -3,6 +3,7 @@ import Header from './components/Header'
 import SearchPanel from './components/SearchPanel'
 import TrailheadGrid from './components/TrailheadGrid'
 import { extractPermitId, getPermitAvailability, getPermitDetails, getPermitDivisions, getFacilityMedia } from './api'
+import { getPreset } from './presets'
 
 export default function App() {
   const [permitInput, setPermitInput] = useState('233261')
@@ -52,6 +53,7 @@ export default function App() {
   }, [permitInput, selectedDate])
 
   const permitName = results?.details?.FacilityName
+  const activePreset = getPreset(activePermitId)
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -90,6 +92,8 @@ export default function App() {
             selectedDate={selectedDate}
             groupSize={groupSize}
             permitId={activePermitId}
+            mapImage={activePreset?.mapImage}
+            mapEmbed={activePreset?.mapEmbed}
           />
         )}
 

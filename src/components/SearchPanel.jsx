@@ -1,7 +1,4 @@
-const PRESETS = [
-  { id: '233261', name: 'Desolation Wilderness Permit' },
-  { id: '4675311', name: 'Central Cascades Wilderness Overnight Permits' },
-]
+import { PRESETS } from '../presets'
 
 export default function SearchPanel({
   permitInput,
