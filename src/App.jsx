@@ -5,7 +5,7 @@ import TrailheadGrid from './components/TrailheadGrid'
 import { extractPermitId, getPermitAvailability, getPermitDetails, getPermitDivisions, getFacilityMedia } from './api'
 
 export default function App() {
-  const [permitInput, setPermitInput] = useState('')
+  const [permitInput, setPermitInput] = useState('233261')
   const [selectedDate, setSelectedDate] = useState('')
   const [groupSize, setGroupSize] = useState(1)
   const [results, setResults] = useState(null)
