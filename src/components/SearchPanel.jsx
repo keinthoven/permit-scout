@@ -39,7 +39,7 @@ export default function SearchPanel({
           <select
             value={mode}
             onChange={(e) => handlePermitChange(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
+            className="w-full h-[42px] px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
           >
             {PRESETS.map((p) => (
               <option key={p.id} value={p.id}>
@@ -76,7 +76,7 @@ export default function SearchPanel({
             min={today}
             onChange={(e) => onDateChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2.5 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            className="w-full h-[42px] px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
           />
         </div>
 
@@ -92,7 +92,7 @@ export default function SearchPanel({
             max={25}
             onChange={(e) => onGroupSizeChange(Math.max(1, parseInt(e.target.value) || 1))}
             onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2.5 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            className="w-full h-[42px] px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default function SearchPanel({
           <button
             onClick={onSearch}
             disabled={loading}
-            className="py-2.5 px-6 bg-green-800 hover:bg-green-700 disabled:bg-stone-300 text-white text-sm font-semibold rounded-xl transition-colors"
+            className="h-[42px] px-6 bg-green-800 hover:bg-green-700 disabled:bg-stone-300 text-white text-sm font-semibold rounded-xl transition-colors"
           >
             {loading ? 'Scanning…' : 'Search'}
           </button>
