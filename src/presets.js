@@ -12,6 +12,7 @@ export const PRESETS = [
   {
     id: '4675311',
     name: 'Central Cascades Wilderness Overnight Permits',
+    mapEmbed: 'https://caltopo.com/m/097ATKF',
   },
 ]
 
