@@ -25,8 +25,18 @@ const SOURCES = [
   { id: 'emigrant-wilderness', usfsName: 'Emigrant Wilderness' },
   { id: 'dinkey-lakes-wilderness', usfsName: 'Dinkey Lakes Wilderness' },
   { id: 'enchantments', usfsName: 'Alpine Lakes Wilderness' },
-  { id: 'central-cascades', usfsName: 'Alpine Lakes Wilderness' },
-  { id: 'three-sisters-wilderness', usfsName: 'Three Sisters Wilderness' },
+  // Central Oregon Cascades permit (4675311) covers all five wildernesses below.
+  // We fetch each and merge into a single MultiPolygon.
+  {
+    id: 'central-cascades',
+    usfsNames: [
+      'Three Sisters Wilderness',
+      'Mount Jefferson Wilderness',
+      'Mount Washington Wilderness',
+      'Diamond Peak Wilderness',
+      'Waldo Lake Wilderness',
+    ],
+  },
   { id: 'glacier-peak-wilderness', usfsName: 'Glacier Peak Wilderness' },
   { id: 'indian-peaks-wilderness', usfsName: 'Indian Peaks Wilderness' },
   { id: 'maroon-bells-snowmass', usfsName: 'Maroon Bells-Snowmass Wilderness' },
@@ -123,6 +133,18 @@ async function main() {
     process.stdout.write(`Fetching ${src.id}…`)
     let feature = null
     if (src.usfsName) feature = await fetchUsfs(src.usfsName)
+    else if (src.usfsNames) {
+      // Fetch all named wildernesses and merge into one feature
+      const features = []
+      for (const n of src.usfsNames) {
+        const f = await fetchUsfs(n)
+        if (f) features.push(f)
+      }
+      if (features.length) {
+        feature = mergeFeatures(features)
+        feature.properties = { source: 'USFS (merged)', names: src.usfsNames }
+      }
+    }
     else if (src.npsName) feature = await fetchNps(src.npsName)
     else if (src.manual) feature = src.manual
 
