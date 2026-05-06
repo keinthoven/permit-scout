@@ -156,23 +156,77 @@ export default function PlannerPage() {
         )}
       </div>
 
-      {/* Legend */}
-      {tripDate && (
-        <div className="mb-6 flex flex-wrap gap-2 text-xs">
-          <span className="px-2.5 py-1 rounded-full font-medium bg-red-500 text-white">
-            Act now (≤ 7 days)
-          </span>
-          <span className="px-2.5 py-1 rounded-full font-medium bg-amber-400 text-amber-900">
-            Soon (≤ 30 days)
-          </span>
-          <span className="px-2.5 py-1 rounded-full font-medium bg-blue-400 text-white">
-            Later
-          </span>
-          <span className="px-2.5 py-1 rounded-full font-medium bg-green-500 text-white">
-            Open now
-          </span>
+      {/* Color legend */}
+      <div className="mb-6 bg-white border border-stone-200 rounded-xl p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-3">
+          Color guide
+        </p>
+        <div className="flex flex-col gap-3">
+          {/* Permit type — shown on each card's top-right badge */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-stone-500 font-medium w-32 shrink-0">
+              Permit type badge
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-blue-100 text-blue-800">
+              Quota
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-amber-100 text-amber-800">
+              Lottery
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-green-100 text-green-800">
+              Walk-up / Self-Issue
+            </span>
+          </div>
+
+          {/* Region — gradient on the card header */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-stone-500 font-medium w-32 shrink-0">
+              Card header (region)
+            </span>
+            {[
+              ['Sierra Nevada', 'from-emerald-800 to-teal-900'],
+              ['Bay Area / Coast', 'from-cyan-700 to-teal-900'],
+              ['Northern California', 'from-orange-700 to-red-900'],
+              ['Pacific Northwest', 'from-green-700 to-emerald-900'],
+              ['Rocky Mountains', 'from-slate-600 to-blue-900'],
+              ['Southwest', 'from-orange-600 to-red-800'],
+              ['Midwest', 'from-teal-700 to-cyan-900'],
+              ['Northern Rockies', 'from-stone-600 to-slate-800'],
+            ].map(([label, gradient]) => (
+              <span
+                key={label}
+                className={`px-2.5 py-1 rounded-full font-semibold text-white bg-gradient-to-br ${gradient}`}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Urgency — shown on each booking row + the map regions */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-stone-500 font-medium w-32 shrink-0">
+              Booking urgency
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-red-500 text-white">
+              Act now (≤ 7 days)
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-amber-400 text-amber-900">
+              Soon (≤ 30 days)
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-blue-400 text-white">
+              Later
+            </span>
+            <span className="px-2.5 py-1 rounded-full font-semibold bg-green-500 text-white">
+              Open now
+            </span>
+            {!tripDate && (
+              <span className="text-stone-400 italic ml-1">
+                — set a target trip date to activate
+              </span>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Area grid */}
       {filtered.length > 0 ? (

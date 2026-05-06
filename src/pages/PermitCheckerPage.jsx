@@ -114,6 +114,10 @@ export default function PermitCheckerPage() {
           </p>
         </div>
       )}
+
+      <footer className="mt-16 pb-4 text-center text-xs text-stone-400">
+        Heads up: Permit Checker only works with trailhead-based wilderness permits — the kind where Recreation.gov asks you to pick a starting zone.
+      </footer>
     </main>
   )
 }

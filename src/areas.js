@@ -273,6 +273,173 @@ export const AREAS = [
   },
 
   {
+    id: 'inyo-national-forest',
+    name: 'Inyo National Forest (Forest-wide Permits)',
+    state: 'CA',
+    region: 'Sierra Nevada',
+    managing: 'Inyo National Forest',
+    permitType: 'quota',
+    season: { start: 'May 1', end: 'Nov 1' },
+    tags: ['sierra', 'overnight', 'popular', 'jmt', 'east side'],
+    notes:
+      'Single forest-wide permit covers all overnight wilderness entry on the Inyo NF — including John Muir, Ansel Adams, Hoover (south), Inyo Mountains, White Mountain, South Sierra, and Golden Trout Wildernesses. Mt. Whitney has a separate lottery.',
+    subLocations: [
+      {
+        id: 'inyo-nf-permit',
+        name: 'Forest-wide Wilderness Permit',
+        recGovId: '233262',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 168,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+          notes: '60% advance reservable; 40% walk-up day before entry.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'sierra-national-forest',
+    name: 'Sierra National Forest (Forest-wide Permits)',
+    state: 'CA',
+    region: 'Sierra Nevada',
+    managing: 'Sierra National Forest',
+    permitType: 'quota',
+    season: { start: 'May 1', end: 'Nov 1' },
+    tags: ['sierra', 'overnight', 'west side'],
+    notes:
+      'Single forest-wide permit covers wilderness entry on the Sierra NF (west side of the range) — including John Muir, Ansel Adams, Dinkey Lakes, Kaiser, and Monarch Wildernesses. Less crowded than Inyo NF entries.',
+    subLocations: [
+      {
+        id: 'sierra-nf-permit',
+        name: 'Forest-wide Wilderness Permit',
+        recGovId: '445858',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 168,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'sequoia-kings-canyon',
+    name: 'Sequoia & Kings Canyon Wilderness',
+    state: 'CA',
+    region: 'Sierra Nevada',
+    managing: 'Sequoia & Kings Canyon National Parks (NPS)',
+    permitType: 'quota',
+    season: { start: 'May 25', end: 'Sep 25' },
+    tags: ['sierra', 'overnight', 'nps', 'popular', 'jmt'],
+    notes:
+      'Two adjacent national parks managed jointly. Wilderness covers most of the parks — High Sierra Trail, Rae Lakes Loop, and JMT thru-hikers all use this permit system.',
+    subLocations: [
+      {
+        id: 'seki-overnight',
+        name: 'Wilderness Permit (overnight)',
+        recGovId: '445857',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 168,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+          notes:
+            '75% reservable in advance; 25% walk-up at trailhead ranger stations the day before.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'death-valley',
+    name: 'Death Valley National Park Wilderness',
+    state: 'CA',
+    region: 'Southwest',
+    managing: 'Death Valley National Park (NPS)',
+    permitType: 'quota',
+    season: { start: 'October 15', end: 'May 15' },
+    tags: ['california', 'overnight', 'nps', 'desert', 'shoulder-season'],
+    notes:
+      'Backpacking permit for off-road overnight trips. Best season is fall through spring — summer temperatures are dangerous. Most backpacking is cross-country with no formal trails.',
+    subLocations: [
+      {
+        id: 'death-valley-permit',
+        name: 'Wilderness Backpacking Permit',
+        recGovId: '4675343',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 90,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'joshua-tree',
+    name: 'Joshua Tree National Park Wilderness',
+    state: 'CA',
+    region: 'Southwest',
+    managing: 'Joshua Tree National Park (NPS)',
+    permitType: 'quota',
+    season: { start: 'October 1', end: 'May 31' },
+    tags: ['california', 'overnight', 'nps', 'desert', 'climbing'],
+    notes:
+      'Backpacking permit for overnight trips in JTNP wilderness. Fall through spring is the prime season; summer is brutally hot. Park is famous for climbing and unique Joshua trees.',
+    subLocations: [
+      {
+        id: 'joshua-tree-permit',
+        name: 'Wilderness Backpacking Permit',
+        recGovId: '4675329',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 90,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'king-range',
+    name: 'King Range Wilderness (Lost Coast)',
+    state: 'CA',
+    region: 'Northern California',
+    managing: 'BLM Arcata Field Office',
+    permitType: 'quota',
+    season: { start: 'Year-round', end: null },
+    tags: ['california', 'coast', 'overnight', 'blm', 'lost coast', 'iconic'],
+    notes:
+      'The Lost Coast Trail traverses one of the longest stretches of undeveloped coastline in the lower 48. Tide planning is critical — sections are impassable at high tide. Permits required year-round for overnight trips.',
+    subLocations: [
+      {
+        id: 'king-range-permit',
+        name: 'Wilderness Backpacking Permit',
+        recGovId: '445864',
+        type: 'permit',
+        bookingWindow: {
+          type: 'rolling',
+          windowDays: 90,
+          releaseTime: '07:00',
+          timezone: 'America/Los_Angeles',
+          notes:
+            'Black bear canisters required. Mid-April through mid-September is peak season.',
+        },
+      },
+    ],
+  },
+
+  {
     id: 'lassen-volcanic-backcountry',
     name: 'Lassen Volcanic National Park',
     state: 'CA',
