@@ -1,29 +1,18 @@
 import { useState, useMemo } from 'react'
 import { AREAS } from '../areas'
-import AreaCard from '../components/AreaCard'
+import AreaCard, { areaUrgency } from '../components/AreaCard'
 import PlannerFilters from '../components/PlannerFilters'
 
-// Sort areas by reservation open date so the most time-sensitive appear first.
-// Walk-up areas (no reservationOpens) go to the bottom.
-const MONTH_ORDER = {
-  Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
-  July: 7, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12,
-}
-
-function reservationSortKey(area) {
-  if (!area.reservationOpens) return 99
-  const match = area.reservationOpens.match(/([A-Za-z]+)\s+(\d+)/)
-  if (!match) return 98
-  const month = MONTH_ORDER[match[1]] ?? 50
-  const day = parseInt(match[2], 10)
-  return month * 100 + day
-}
+const URGENCY_RANK = { critical: 0, soon: 1, later: 2, none: 3 }
 
 export default function PlannerPage() {
+  const [tripDate, setTripDate] = useState('')
   const [search, setSearch] = useState('')
   const [stateFilter, setStateFilter] = useState('')
   const [regionFilter, setRegionFilter] = useState('')
   const [permitTypeFilter, setPermitTypeFilter] = useState('')
+
+  const today = new Date().toISOString().split('T')[0]
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -38,10 +27,17 @@ export default function PlannerPage() {
         if (!haystack.includes(q)) return false
       }
       return true
-    }).sort((a, b) => reservationSortKey(a) - reservationSortKey(b))
-  }, [search, stateFilter, regionFilter, permitTypeFilter])
+    }).sort((a, b) => {
+      // Sort by most-urgent sub-location first when a trip date is set
+      const ua = areaUrgency(a, tripDate)
+      const ub = areaUrgency(b, tripDate)
+      if (URGENCY_RANK[ua] !== URGENCY_RANK[ub]) return URGENCY_RANK[ua] - URGENCY_RANK[ub]
+      return a.name.localeCompare(b.name)
+    })
+  }, [search, stateFilter, regionFilter, permitTypeFilter, tripDate])
 
-  const activeFilterCount = [stateFilter, regionFilter, permitTypeFilter, search].filter(Boolean).length
+  const activeFilterCount =
+    [stateFilter, regionFilter, permitTypeFilter, search].filter(Boolean).length
 
   function clearFilters() {
     setSearch('')
@@ -53,12 +49,55 @@ export default function PlannerPage() {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Page intro */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-stone-800">Trip Planner</h2>
         <p className="text-stone-500 mt-1 max-w-2xl">
-          Reservation windows, quota types, and booking details for popular wilderness areas —
-          everything you need to plan around permit season before competition opens up.
+          Reservation windows, lottery dates, and "when do I need to book?" guidance for
+          popular wilderness areas — all in one place.
         </p>
+      </div>
+
+      {/* Trip date input — the core "when should I book?" feature */}
+      <div className="bg-gradient-to-br from-green-900 to-emerald-800 rounded-2xl p-6 mb-6 text-white shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-1">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-green-200 mb-1.5">
+              Target trip date
+            </label>
+            <p className="text-xs text-green-200/80 mb-2">
+              Enter a date and we'll calculate when you need to book each permit.
+            </p>
+            <input
+              type="date"
+              value={tripDate}
+              min={today}
+              onChange={(e) => setTripDate(e.target.value)}
+              className="w-full sm:w-64 h-[42px] px-3 text-sm border border-white/20 bg-white/10 rounded-xl text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white focus:text-stone-800 [color-scheme:dark]"
+            />
+          </div>
+          {tripDate && (
+            <button
+              onClick={() => setTripDate('')}
+              className="h-[42px] px-4 rounded-xl text-sm font-medium bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              Clear trip date
+            </button>
+          )}
+        </div>
+        {tripDate && (
+          <p className="mt-4 text-sm text-green-100">
+            Showing booking dates for{' '}
+            <span className="font-semibold text-white">
+              {new Date(tripDate + 'T12:00:00').toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </span>
+            . Areas sorted by urgency.
+          </p>
+        )}
       </div>
 
       <PlannerFilters
@@ -78,7 +117,10 @@ export default function PlannerPage() {
           Showing <span className="font-semibold text-stone-700">{filtered.length}</span> of{' '}
           {AREAS.length} areas
           {activeFilterCount > 0 && (
-            <span className="text-stone-400"> · {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active</span>
+            <span className="text-stone-400">
+              {' · '}
+              {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active
+            </span>
           )}
         </p>
         {activeFilterCount > 0 && (
@@ -92,24 +134,28 @@ export default function PlannerPage() {
       </div>
 
       {/* Legend */}
-      <div className="mb-6 flex flex-wrap gap-3 text-xs">
-        {[
-          { label: 'Quota', style: 'bg-blue-100 text-blue-800' },
-          { label: 'Lottery', style: 'bg-amber-100 text-amber-800' },
-          { label: 'Walk-up / Self-Issue', style: 'bg-green-100 text-green-800' },
-        ].map(({ label, style }) => (
-          <span key={label} className={`px-2.5 py-1 rounded-full font-medium ${style}`}>
-            {label}
+      {tripDate && (
+        <div className="mb-6 flex flex-wrap gap-2 text-xs">
+          <span className="px-2.5 py-1 rounded-full font-medium bg-red-500 text-white">
+            Act now (≤ 7 days)
           </span>
-        ))}
-        <span className="text-stone-400 self-center">Cards sorted by reservation open date ↓</span>
-      </div>
+          <span className="px-2.5 py-1 rounded-full font-medium bg-amber-400 text-amber-900">
+            Soon (≤ 30 days)
+          </span>
+          <span className="px-2.5 py-1 rounded-full font-medium bg-blue-400 text-white">
+            Later
+          </span>
+          <span className="px-2.5 py-1 rounded-full font-medium bg-green-500 text-white">
+            Open now
+          </span>
+        </div>
+      )}
 
       {/* Area grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((area) => (
-            <AreaCard key={area.id} area={area} />
+            <AreaCard key={area.id} area={area} tripDate={tripDate} />
           ))}
         </div>
       ) : (
@@ -127,8 +173,8 @@ export default function PlannerPage() {
 
       {/* Disclaimer */}
       <p className="mt-12 text-center text-xs text-stone-400 max-w-2xl mx-auto">
-        Reservation dates and quota details are based on recent seasons and may change year to year.
-        Always confirm current-year information on Recreation.gov or with the managing agency before booking.
+        Booking windows and lottery dates change year to year. Always confirm current
+        information on Recreation.gov or with the managing agency before relying on these dates.
       </p>
     </main>
   )
