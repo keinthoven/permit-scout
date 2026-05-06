@@ -22,22 +22,18 @@ const REGION_GRADIENTS = {
 function CountdownPill({ daysUntil, urgency }) {
   if (daysUntil == null) return null
   const styles = URGENCY_STYLES[urgency]
+  const baseClasses =
+    'inline-block px-2 py-0.5 text-[11px] font-semibold rounded-full text-center leading-tight'
   if (daysUntil < 0) {
     return (
-      <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-green-500 text-white">
-        Open now
-      </span>
+      <span className={`${baseClasses} bg-green-500 text-white`}>Open now</span>
     )
   }
   if (daysUntil === 0) {
-    return (
-      <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${styles.badge}`}>
-        Today!
-      </span>
-    )
+    return <span className={`${baseClasses} ${styles.badge}`}>Today!</span>
   }
   return (
-    <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${styles.badge}`}>
+    <span className={`${baseClasses} ${styles.badge}`}>
       in {daysUntil} day{daysUntil === 1 ? '' : 's'}
     </span>
   )
