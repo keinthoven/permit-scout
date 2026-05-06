@@ -14,6 +14,8 @@ const USFS_BASE =
   'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_Wilderness_01/MapServer/0/query'
 const NPS_BASE =
   'https://services1.arcgis.com/fBc8EJBxQRMcHlei/arcgis/rest/services/NPS_Land_Resources_Division_Boundary_and_Tract_Data_Service/FeatureServer/2/query'
+const BLM_BASE =
+  'https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_NLCS_WLD_WSA/MapServer/0/query'
 
 // Map our internal area IDs to source records.
 const SOURCES = [
@@ -53,6 +55,40 @@ const SOURCES = [
   },
   { id: 'grand-canyon-backcountry', npsName: 'Grand Canyon National Park' },
   { id: 'zion-narrows', npsName: 'Zion National Park' },
+  { id: 'death-valley', npsName: 'Death Valley National Park' },
+  { id: 'joshua-tree', npsName: 'Joshua Tree National Park' },
+  // SEKI is two adjacent parks managed jointly — fetch and merge
+  {
+    id: 'sequoia-kings-canyon',
+    npsNames: ['Sequoia National Park', 'Kings Canyon National Park'],
+  },
+
+  // ─── Forest-wide permits (merge multiple wilderness shapes) ───
+  {
+    id: 'inyo-national-forest',
+    usfsNames: [
+      'John Muir Wilderness',
+      'Ansel Adams Wilderness',
+      'Hoover Wilderness',
+      'Inyo Mountains Wilderness',
+      'White Mountain Wilderness',
+      'South Sierra Wilderness',
+      'Golden Trout Wilderness',
+    ],
+  },
+  {
+    id: 'sierra-national-forest',
+    usfsNames: [
+      'John Muir Wilderness',
+      'Ansel Adams Wilderness',
+      'Dinkey Lakes Wilderness',
+      'Kaiser Wilderness',
+      'Monarch Wilderness',
+    ],
+  },
+
+  // ─── BLM-managed wilderness ───
+  { id: 'king-range', blmName: 'King Range Wilderness' },
 
   // ─── Manual approximations (tribal land / no public service) ───
   {
@@ -107,6 +143,39 @@ async function fetchNps(name) {
   return feature
 }
 
+async function fetchBlm(name) {
+  // BLM service doesn't speak GeoJSON natively, so request Esri JSON in WGS84
+  // and convert to GeoJSON ourselves.
+  const url =
+    `${BLM_BASE}?where=NLCS_NAME%3D'${encodeURIComponent(name)}'` +
+    `&outFields=NLCS_NAME&outSR=4326&f=json&returnGeometry=true` +
+    `&maxAllowableOffset=0.005`
+  const res = await fetch(url)
+  const data = await res.json()
+  if (!data.features?.length) {
+    console.warn(`  ⚠️  No BLM feature found for "${name}"`)
+    return null
+  }
+  // Convert Esri rings → GeoJSON polygon coordinates
+  const polygons = data.features.map((f) => {
+    const rings = f.geometry?.rings || []
+    return rings.map((ring) =>
+      ring.map(([x, y]) => [
+        Math.round(x * 1000) / 1000,
+        Math.round(y * 1000) / 1000,
+      ]),
+    )
+  })
+  return {
+    type: 'Feature',
+    geometry:
+      polygons.length === 1
+        ? { type: 'Polygon', coordinates: polygons[0] }
+        : { type: 'MultiPolygon', coordinates: polygons },
+    properties: { source: 'BLM', name },
+  }
+}
+
 // Merge a list of features into a single MultiPolygon
 function mergeFeatures(features) {
   const polygons = []
@@ -134,7 +203,6 @@ async function main() {
     let feature = null
     if (src.usfsName) feature = await fetchUsfs(src.usfsName)
     else if (src.usfsNames) {
-      // Fetch all named wildernesses and merge into one feature
       const features = []
       for (const n of src.usfsNames) {
         const f = await fetchUsfs(n)
@@ -146,6 +214,18 @@ async function main() {
       }
     }
     else if (src.npsName) feature = await fetchNps(src.npsName)
+    else if (src.npsNames) {
+      const features = []
+      for (const n of src.npsNames) {
+        const f = await fetchNps(n)
+        if (f) features.push(f)
+      }
+      if (features.length) {
+        feature = mergeFeatures(features)
+        feature.properties = { source: 'NPS (merged)', names: src.npsNames }
+      }
+    }
+    else if (src.blmName) feature = await fetchBlm(src.blmName)
     else if (src.manual) feature = src.manual
 
     if (feature) {
