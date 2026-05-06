@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { AREAS } from '../areas'
 import AreaCard, { areaUrgency } from '../components/AreaCard'
 import PlannerFilters from '../components/PlannerFilters'
+import RegionMap from '../components/RegionMap'
 
 const URGENCY_RANK = { critical: 0, soon: 1, later: 2, none: 3 }
 
@@ -11,6 +12,15 @@ export default function PlannerPage() {
   const [stateFilter, setStateFilter] = useState('')
   const [regionFilter, setRegionFilter] = useState('')
   const [permitTypeFilter, setPermitTypeFilter] = useState('')
+  const [highlightedAreaId, setHighlightedAreaId] = useState(null)
+
+  const handleRegionClick = useCallback((areaId) => {
+    const el = document.getElementById(`area-card-${areaId}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setHighlightedAreaId(areaId)
+    setTimeout(() => setHighlightedAreaId((curr) => (curr === areaId ? null : curr)), 2200)
+  }, [])
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -111,6 +121,19 @@ export default function PlannerPage() {
         onPermitType={setPermitTypeFilter}
       />
 
+      {/* Interactive region map — click a shaded region to scroll to its card */}
+      <div className="mt-6">
+        <RegionMap
+          areas={AREAS}
+          filteredAreas={filtered}
+          tripDate={tripDate}
+          onRegionClick={handleRegionClick}
+        />
+        <p className="mt-2 text-xs text-stone-400 text-center">
+          Click a shaded region to jump to its details. Filtered-out areas are dimmed.
+        </p>
+      </div>
+
       {/* Results header */}
       <div className="mt-6 mb-4 flex items-center justify-between">
         <p className="text-sm text-stone-500">
@@ -155,7 +178,17 @@ export default function PlannerPage() {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((area) => (
-            <AreaCard key={area.id} area={area} tripDate={tripDate} />
+            <div
+              key={area.id}
+              id={`area-card-${area.id}`}
+              className={`scroll-mt-6 transition-all duration-500 ${
+                highlightedAreaId === area.id
+                  ? 'ring-4 ring-green-500 ring-offset-2 rounded-2xl'
+                  : ''
+              }`}
+            >
+              <AreaCard area={area} tripDate={tripDate} />
+            </div>
           ))}
         </div>
       ) : (
