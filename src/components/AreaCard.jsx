@@ -2,39 +2,39 @@ import { useState } from 'react'
 import { PERMIT_TYPE_LABELS } from '../areas'
 import { computeBooking, URGENCY_STYLES } from '../bookingCalculator'
 
+// Soft pastel badge styles for the permit-type chip
 const PERMIT_TYPE_STYLES = {
-  quota: 'bg-blue-100 text-blue-800',
+  quota: 'bg-sky-100 text-sky-800',
   lottery: 'bg-amber-100 text-amber-800',
-  'self-issue': 'bg-green-100 text-green-800',
+  'self-issue': 'bg-emerald-100 text-emerald-800',
 }
 
-const REGION_GRADIENTS = {
-  'Sierra Nevada': 'from-emerald-800 to-teal-900',
-  'Bay Area / Coast': 'from-cyan-700 to-teal-900',
-  'Northern California': 'from-orange-700 to-red-900',
-  'Pacific Northwest': 'from-green-700 to-emerald-900',
-  'Rocky Mountains': 'from-slate-600 to-blue-900',
-  'Southwest': 'from-orange-600 to-red-800',
-  'Midwest': 'from-teal-700 to-cyan-900',
-  'Northern Rockies': 'from-stone-600 to-slate-800',
+// Pastel region gradients — light enough for dark text on top
+export const REGION_GRADIENTS = {
+  'Sierra Nevada': 'from-emerald-100 to-teal-200',
+  'Bay Area / Coast': 'from-cyan-100 to-sky-200',
+  'Northern California': 'from-orange-100 to-rose-200',
+  'Pacific Northwest': 'from-green-100 to-emerald-200',
+  'Rocky Mountains': 'from-slate-100 to-blue-200',
+  'Southwest': 'from-amber-100 to-orange-200',
+  'Midwest': 'from-teal-100 to-cyan-200',
+  'Northern Rockies': 'from-stone-100 to-amber-100',
 }
 
-function CountdownPill({ daysUntil, urgency }) {
+function CountdownPill({ daysUntil, urgency, status }) {
   if (daysUntil == null) return null
   const styles = URGENCY_STYLES[urgency]
-  const baseClasses =
+  const base =
     'inline-block px-2 py-0.5 text-[11px] font-semibold rounded-full text-center leading-tight'
-  if (daysUntil < 0) {
-    return (
-      <span className={`${baseClasses} bg-green-500 text-white`}>Open now</span>
-    )
+  if (daysUntil < 0 || status === 'open-now') {
+    return <span className={`${base} bg-emerald-200 text-emerald-900`}>Open now</span>
   }
   if (daysUntil === 0) {
-    return <span className={`${baseClasses} ${styles.badge}`}>Today!</span>
+    return <span className={`${base} ${styles.badge}`}>Today</span>
   }
   return (
-    <span className={`${baseClasses} ${styles.badge}`}>
-      in {daysUntil} day{daysUntil === 1 ? '' : 's'}
+    <span className={`${base} ${styles.badge}`}>
+      {daysUntil}d
     </span>
   )
 }
@@ -48,14 +48,22 @@ function SubLocationRow({ sub, tripDate }) {
 
   return (
     <div className={`rounded-xl border p-3 ${styles.bg} ${styles.border}`}>
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h4 className="font-semibold text-stone-800 text-sm leading-tight">{sub.name}</h4>
-        <CountdownPill daysUntil={result.daysUntil} urgency={result.urgency} />
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h4 className="font-medium text-stone-700 text-[13px] leading-tight">
+          {sub.name}
+        </h4>
+        <CountdownPill
+          daysUntil={result.daysUntil}
+          urgency={result.urgency}
+          status={result.status}
+        />
       </div>
 
-      <p className={`text-sm font-medium ${styles.text}`}>{result.bookOnLabel}</p>
+      <p className={`text-sm font-semibold ${styles.text}`}>
+        {result.bookOnLabel}
+      </p>
       {result.bookOnDetail && (
-        <p className="text-xs text-stone-500 leading-relaxed mt-1">{result.bookOnDetail}</p>
+        <p className="text-xs text-stone-500 mt-0.5">{result.bookOnDetail}</p>
       )}
 
       {recGovUrl && (
@@ -63,7 +71,7 @@ function SubLocationRow({ sub, tripDate }) {
           href={recGovUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block mt-2 text-xs font-medium text-green-700 hover:text-green-900 underline underline-offset-2"
+          className="inline-block mt-1.5 text-[11px] font-medium text-emerald-700 hover:text-emerald-900"
         >
           View on Recreation.gov →
         </a>
@@ -73,83 +81,53 @@ function SubLocationRow({ sub, tripDate }) {
 }
 
 export default function AreaCard({ area, tripDate }) {
-  const { name, state, region, managing, permitType, season, notes, subLocations } = area
-  const [expanded, setExpanded] = useState(true)
+  const { name, state, region, season, notes, permitType, subLocations } = area
+  const [showNotes, setShowNotes] = useState(false)
 
-  const gradient = REGION_GRADIENTS[region] || 'from-green-700 to-stone-800'
   const typeLabel = PERMIT_TYPE_LABELS[permitType]
   const typeBadge = PERMIT_TYPE_STYLES[permitType] || 'bg-stone-100 text-stone-600'
   const seasonText = season.end ? `${season.start} – ${season.end}` : season.start
-
-  // Compute the most urgent sub-location for the collapsed-state summary
-  const computed = subLocations.map((sub) =>
-    computeBooking(sub.bookingWindow, tripDate ? new Date(tripDate) : null),
-  )
-  const URGENCY_RANK = { critical: 0, soon: 1, later: 2, none: 3 }
-  const mostUrgent = computed.reduce(
-    (best, r) => (URGENCY_RANK[r.urgency] < URGENCY_RANK[best.urgency] ? r : best),
-    computed[0],
-  )
+  const gradient = REGION_GRADIENTS[region] || 'from-stone-100 to-stone-200'
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-sm border border-stone-200 bg-white flex flex-col hover:shadow-md transition-shadow duration-200">
-      {/* Header bar */}
-      <div className={`bg-gradient-to-br ${gradient} px-5 py-4`}>
+    <div className="rounded-2xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+      {/* Pastel gradient header */}
+      <div className={`px-5 pt-4 pb-3 bg-gradient-to-br ${gradient}`}>
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-white font-bold text-base leading-snug drop-shadow">{name}</h3>
-            <p className="text-white/70 text-xs mt-0.5">
-              {state} · {region}
+          <div className="min-w-0">
+            <h3 className="font-semibold text-stone-800 text-base leading-tight">
+              {name}
+            </h3>
+            <p className="text-[11px] text-stone-600/80 mt-0.5">
+              {state} · {region} · {seasonText}
             </p>
           </div>
-          <span className={`shrink-0 mt-0.5 px-2.5 py-1 text-xs font-semibold rounded-full ${typeBadge}`}>
+          <span
+            className={`shrink-0 px-2 py-0.5 text-[11px] font-semibold rounded-full ${typeBadge}`}
+          >
             {typeLabel}
           </span>
         </div>
+
+        {/* Optional details toggle — keeps notes available without cluttering */}
+        {notes && (
+          <button
+            onClick={() => setShowNotes((v) => !v)}
+            className="mt-2 text-[11px] text-stone-700/70 hover:text-stone-900"
+          >
+            {showNotes ? 'Hide details' : 'Show details'}
+          </button>
+        )}
+        {showNotes && notes && (
+          <p className="mt-1.5 text-xs text-stone-700 leading-relaxed">{notes}</p>
+        )}
       </div>
 
-      {/* Top-line area details */}
-      <div className="px-5 pt-4 pb-2 flex flex-col gap-1.5">
-        <p className="text-xs text-stone-500">
-          <span className="text-stone-400">Managed by</span>{' '}
-          <span className="font-medium text-stone-700">{managing}</span>
-        </p>
-        <p className="text-xs text-stone-500">
-          <span className="text-stone-400">Season</span>{' '}
-          <span className="font-medium text-stone-700">{seasonText}</span>
-        </p>
-        {notes && <p className="text-xs text-stone-500 leading-relaxed mt-1">{notes}</p>}
-      </div>
-
-      {/* Sub-locations (always shown — these contain the actionable booking info) */}
-      <div className="px-5 pb-5 pt-3 flex-1">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs uppercase tracking-wide font-semibold text-stone-500">
-            Booking{subLocations.length > 1 ? ` (${subLocations.length} options)` : ''}
-          </p>
-          {subLocations.length > 1 && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="text-xs text-green-700 hover:text-green-900 font-medium"
-            >
-              {expanded ? 'Collapse' : 'Show all'}
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {(expanded ? subLocations : [subLocations[0]]).map((sub, i) => (
-            <SubLocationRow key={sub.id} sub={sub} tripDate={tripDate} />
-          ))}
-          {!expanded && subLocations.length > 1 && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="text-xs text-stone-500 hover:text-stone-700 self-start mt-1"
-            >
-              + {subLocations.length - 1} more
-            </button>
-          )}
-        </div>
+      {/* Sub-locations — the actionable booking info */}
+      <div className="px-5 py-4 flex flex-col gap-2 flex-1">
+        {subLocations.map((sub) => (
+          <SubLocationRow key={sub.id} sub={sub} tripDate={tripDate} />
+        ))}
       </div>
     </div>
   )

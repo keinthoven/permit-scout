@@ -68,8 +68,8 @@ function calcRolling(bw, tripDate, today) {
     return {
       type: 'rolling',
       status: 'no-trip-date',
-      bookOnLabel: `Rolling ${bw.windowDays}-day window`,
-      bookOnDetail: `Releases at ${formatTimeWithTz(bw.releaseTime, bw.timezone, today)}, ${bw.windowDays} days before each trip date.`,
+      bookOnLabel: `${bw.windowDays}-day rolling window`,
+      bookOnDetail: `Opens ${formatTimeWithTz(bw.releaseTime, bw.timezone, today)}, ${bw.windowDays} days before each trip date.`,
       daysUntil: null,
       urgency: 'none',
     }
@@ -86,9 +86,9 @@ function calcRolling(bw, tripDate, today) {
     type: 'rolling',
     status,
     bookOnLabel: status === 'open-now'
-      ? `Open now — bookable since ${formatLongDate(bookOn)}`
-      : `Book on ${formatLongDate(bookOn)}`,
-    bookOnDetail: `Set an alarm for ${formatTimeWithTz(bw.releaseTime, bw.timezone, bookOn)} sharp. ${bw.windowDays}-day rolling window.${bw.notes ? ' ' + bw.notes : ''}`,
+      ? `Open now (since ${formatLongDate(bookOn)})`
+      : `Book ${formatLongDate(bookOn)}`,
+    bookOnDetail: `${formatTimeWithTz(bw.releaseTime, bw.timezone, bookOn)} • ${bw.windowDays}-day rolling`,
     daysUntil: days,
     urgency: urgencyFromDays(days),
   }
@@ -112,13 +112,11 @@ function calcLottery(bw, tripDate, today) {
   return {
     type: 'lottery',
     status,
-    bookOnLabel: `Lottery: apply ${bw.applicationOpens}`
+    bookOnLabel: `Apply ${bw.applicationOpens}`
       + (bw.applicationCloses ? ` – ${bw.applicationCloses}` : ''),
-    bookOnDetail: [
-      bw.resultsAnnounced ? `Results: ${bw.resultsAnnounced}.` : null,
-      bw.coverage ? `Coverage: ${bw.coverage}.` : null,
-      bw.notes,
-    ].filter(Boolean).join(' '),
+    bookOnDetail: bw.resultsAnnounced
+      ? `Results: ${bw.resultsAnnounced}`
+      : (bw.coverage || ''),
     daysUntil,
     urgency: urgencyFromDays(daysUntil),
   }
@@ -144,22 +142,19 @@ function calcSeasonalRelease(bw, tripDate, today) {
     type: 'seasonal-release',
     status,
     bookOnLabel: `Releases ${bw.releaseDate}${timePart}`,
-    bookOnDetail: [
-      bw.coverage ? `Covers: ${bw.coverage}.` : null,
-      bw.notes,
-    ].filter(Boolean).join(' '),
+    bookOnDetail: bw.coverage ? `Covers ${bw.coverage}` : '',
     daysUntil,
     urgency: urgencyFromDays(daysUntil),
   }
 }
 
 // ─── Self-issue ────────────────────────────────────────────────────────────
-function calcSelfIssue(bw) {
+function calcSelfIssue() {
   return {
     type: 'self-issue',
     status: 'walk-up',
     bookOnLabel: 'No advance booking needed',
-    bookOnDetail: 'Self-issue permit at the trailhead. Just show up.' + (bw.notes ? ' ' + bw.notes : ''),
+    bookOnDetail: 'Self-issue at the trailhead.',
     daysUntil: null,
     urgency: 'none',
   }
@@ -214,26 +209,31 @@ export function computeBooking(bookingWindow, tripDate = null, today = new Date(
   }
 }
 
+// Soft, pastel palette — easy on the eye, low contrast tints with darker
+// text. The `mapFill` colors are used by the Leaflet polygon styling.
 export const URGENCY_STYLES = {
   critical: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-800',
-    badge: 'bg-red-500 text-white',
+    bg: 'bg-rose-50',
+    border: 'border-rose-200',
+    text: 'text-rose-800',
+    badge: 'bg-rose-200 text-rose-900',
+    mapFill: '#FDA4AF', // rose-300
     label: 'Act now',
   },
   soon: {
     bg: 'bg-amber-50',
     border: 'border-amber-200',
     text: 'text-amber-800',
-    badge: 'bg-amber-400 text-amber-900',
+    badge: 'bg-amber-200 text-amber-900',
+    mapFill: '#FCD34D', // amber-300
     label: 'Soon',
   },
   later: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-800',
-    badge: 'bg-blue-400 text-white',
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    text: 'text-sky-800',
+    badge: 'bg-sky-200 text-sky-900',
+    mapFill: '#7DD3FC', // sky-300
     label: 'Later',
   },
   none: {
@@ -241,6 +241,7 @@ export const URGENCY_STYLES = {
     border: 'border-stone-200',
     text: 'text-stone-700',
     badge: 'bg-stone-200 text-stone-700',
+    mapFill: '#A7C9A4', // soft sage
     label: '',
   },
 }
