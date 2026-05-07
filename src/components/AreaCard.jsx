@@ -41,13 +41,12 @@ function CountdownPill({ daysUntil, urgency, status }) {
 
 function SubLocationRow({ sub, tripDate }) {
   const result = computeBooking(sub.bookingWindow, tripDate ? new Date(tripDate) : null)
-  const styles = URGENCY_STYLES[result.urgency]
   const recGovUrl = sub.recGovId
     ? `https://www.recreation.gov/${sub.type === 'campground' ? 'camping/campgrounds' : 'permits'}/${sub.recGovId}`
     : null
 
   return (
-    <div className={`rounded-xl border p-3 ${styles.bg} ${styles.border}`}>
+    <div className="rounded-xl border border-stone-200 bg-stone-50 p-3">
       <div className="flex items-start justify-between gap-2 mb-1">
         <h4 className="font-medium text-stone-700 text-[13px] leading-tight">
           {sub.name}
@@ -59,9 +58,7 @@ function SubLocationRow({ sub, tripDate }) {
         />
       </div>
 
-      <p className={`text-sm font-semibold ${styles.text}`}>
-        {result.bookOnLabel}
-      </p>
+      <p className="text-sm font-semibold text-stone-800">{result.bookOnLabel}</p>
       {result.bookOnDetail && (
         <p className="text-xs text-stone-500 mt-0.5">{result.bookOnDetail}</p>
       )}
