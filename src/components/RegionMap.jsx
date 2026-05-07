@@ -1,33 +1,26 @@
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import 'leaflet/dist/leaflet.css'
 import shapes from '../wildernessShapes.json'
 import { areaUrgency } from './AreaCard'
-
-// Visual styles per urgency level
-const URGENCY_FILL = {
-  critical: '#ef4444', // red-500
-  soon: '#f59e0b', // amber-500
-  later: '#3b82f6', // blue-500
-  none: '#047857', // emerald-700 (default; also walk-up areas)
-}
+import { URGENCY_STYLES } from '../bookingCalculator'
 
 function styleFor(urgency, isVisible) {
-  const color = URGENCY_FILL[urgency] || URGENCY_FILL.none
+  const color = URGENCY_STYLES[urgency]?.mapFill || URGENCY_STYLES.none.mapFill
   if (!isVisible) {
     return {
-      color: '#6b7280', // gray-500 stroke
+      color: '#9ca3af',
       weight: 1,
-      fillColor: '#9ca3af', // gray-400 fill
-      fillOpacity: 0.18,
+      fillColor: '#cbd5d1',
+      fillOpacity: 0.15,
       opacity: 0.3,
     }
   }
   return {
     color,
-    weight: 2,
+    weight: 1.5,
     fillColor: color,
-    fillOpacity: 0.45,
+    fillOpacity: 0.5,
     opacity: 0.85,
   }
 }
