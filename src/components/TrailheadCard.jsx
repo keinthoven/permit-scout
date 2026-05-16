@@ -57,7 +57,7 @@ function Badge({ zone, groupSize }) {
 }
 
 export default function TrailheadCard({ zone, groupSize, permitId, selectedDate, imageUrl, gradientIndex }) {
-  const { name, description, remaining, total, status, releaseDate } = zone
+  const { name, description, remaining, total, unlimited, status, releaseDate } = zone
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length]
 
   const isUnavailable = status === 'no-quota'
@@ -119,21 +119,25 @@ export default function TrailheadCard({ zone, groupSize, permitId, selectedDate,
             remaining !== null && (
               <div>
                 <p className="text-xs text-stone-400 uppercase tracking-wide">Available</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    remaining === 0
-                      ? 'text-red-500'
-                      : remaining < groupSize
-                      ? 'text-amber-500'
-                      : 'text-green-600'
-                  }`}
-                >
-                  {remaining}
-                </p>
+                {unlimited ? (
+                  <p className="text-2xl font-bold text-green-600">Unlimited</p>
+                ) : (
+                  <p
+                    className={`text-2xl font-bold ${
+                      remaining === 0
+                        ? 'text-red-500'
+                        : remaining < groupSize
+                        ? 'text-amber-500'
+                        : 'text-green-600'
+                    }`}
+                  >
+                    {remaining}
+                  </p>
+                )}
               </div>
             )
           )}
-          {total !== null && (
+          {total !== null && !unlimited && (
             <div>
               <p className="text-xs text-stone-400 uppercase tracking-wide">Daily Quota</p>
               <p className="text-2xl font-bold text-stone-700">{total}</p>

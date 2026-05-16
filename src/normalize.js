@@ -37,6 +37,10 @@ export function normalizeRecgov(availability, divisions, selectedDate) {
   })
 }
 
+// Recreation.gov reports this sentinel value for entry points with no quota
+// cap (self-issue trailheads); it should display as "Unlimited", not a number.
+const UNLIMITED_QUOTA = 999999
+
 // permitinyo backend (Yosemite Wilderness, …). `availability` is the payload
 // from getYosemiteAvailability: a { date: { divisionId: cell } } map.
 export function normalizeYosemite(content, availability, selectedDate) {
@@ -50,6 +54,7 @@ export function normalizeYosemite(content, availability, selectedDate) {
 
     const cell = dayMap[internalId]
     let status, remaining, total, releaseDate
+    let unlimited = false
 
     if (!cell) {
       status = 'no-quota'
@@ -60,6 +65,7 @@ export function normalizeYosemite(content, availability, selectedDate) {
       const quota = cell.quota_usage_by_member_daily || {}
       remaining = quota.remaining ?? null
       total = quota.total ?? null
+      unlimited = total !== null && total >= UNLIMITED_QUOTA
       if (cell.not_yet_released) {
         status = 'not-released'
         releaseDate = cell.release_date || null
@@ -76,6 +82,7 @@ export function normalizeYosemite(content, availability, selectedDate) {
       description: '',
       remaining,
       total,
+      unlimited,
       status,
       releaseDate,
       viewOrder: div.view_order ?? 9999,
