@@ -38,6 +38,11 @@ export const PRESETS = [
       'https://cdn.recreation.gov/public/2025/08/05/05/50/232448_422d8aa3-1071-4e8b-984c-96c5ffca38a9_700.webp',
     ],
   },
+  {
+    id: '445856',
+    name: 'Hoover Wilderness Permits',
+    apiType: 'permitinyo',
+  },
 ]
 
 export function getPreset(permitId) {
