@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import { PRESETS } from '../presets'
+
+const MIN_GROUP = 1
+const MAX_GROUP = 25
 
 export default function SearchPanel({
   permitInput,
@@ -14,8 +18,35 @@ export default function SearchPanel({
   const matchedPreset = PRESETS.find((p) => p.id === permitInput)
   const mode = matchedPreset ? matchedPreset.id : 'custom'
 
+  const [groupText, setGroupText] = useState(String(groupSize))
+
   function handleKeyDown(e) {
     if (e.key === 'Enter') onSearch()
+  }
+
+  function commitGroup(value) {
+    const clamped = Math.min(MAX_GROUP, Math.max(MIN_GROUP, value))
+    setGroupText(String(clamped))
+    onGroupSizeChange(clamped)
+  }
+
+  function handleGroupChange(e) {
+    const raw = e.target.value
+    setGroupText(raw)
+    const n = parseInt(raw, 10)
+    if (!Number.isNaN(n) && n >= MIN_GROUP && n <= MAX_GROUP) {
+      onGroupSizeChange(n)
+    }
+  }
+
+  function handleGroupBlur() {
+    const n = parseInt(groupText, 10)
+    commitGroup(Number.isNaN(n) ? MIN_GROUP : n)
+  }
+
+  function stepGroup(delta) {
+    const base = parseInt(groupText, 10)
+    commitGroup((Number.isNaN(base) ? groupSize : base) + delta)
   }
 
   function handlePermitChange(value) {
@@ -85,15 +116,37 @@ export default function SearchPanel({
           <label className="block text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5">
             Group Size
           </label>
-          <input
-            type="number"
-            value={groupSize}
-            min={1}
-            max={25}
-            onChange={(e) => onGroupSizeChange(Math.max(1, parseInt(e.target.value) || 1))}
-            onKeyDown={handleKeyDown}
-            className="w-full h-[42px] px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-          />
+          <div className="flex items-stretch h-[42px] border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-green-600 focus-within:border-transparent">
+            <button
+              type="button"
+              onClick={() => stepGroup(-1)}
+              disabled={groupSize <= MIN_GROUP}
+              aria-label="Decrease group size"
+              className="w-10 shrink-0 flex items-center justify-center text-lg text-stone-500 hover:bg-stone-50 disabled:text-stone-300 disabled:hover:bg-transparent"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={groupText}
+              min={MIN_GROUP}
+              max={MAX_GROUP}
+              onChange={handleGroupChange}
+              onBlur={handleGroupBlur}
+              onKeyDown={handleKeyDown}
+              className="no-spinner min-w-0 flex-1 text-center text-sm border-x border-stone-200 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => stepGroup(1)}
+              disabled={groupSize >= MAX_GROUP}
+              aria-label="Increase group size"
+              className="w-10 shrink-0 flex items-center justify-center text-lg text-stone-500 hover:bg-stone-50 disabled:text-stone-300 disabled:hover:bg-transparent"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Search */}
