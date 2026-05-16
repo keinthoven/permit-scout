@@ -95,3 +95,54 @@ export async function getFacilityMedia(permitId) {
     throw new Error('Unable to reach permit media service right now. Please try again shortly.')
   }
 }
+
+// ─── permitinyo backend (Yosemite-style wilderness permits) ─────────────────
+//
+// Yosemite Wilderness (and the Inyo/SEKI/Whitney permits) are not served by
+// the /api/permits/{id} endpoints above. They use /api/permitcontent for
+// metadata and /api/permitinyo for availability.
+
+// Fetch permit metadata + entry points (divisions) for a permitinyo permit.
+export async function getYosemiteContent(permitId) {
+  try {
+    const res = await fetch(`/recgov/api/permitcontent/${permitId}`)
+    if (!res.ok) {
+      if (isServerOrProxyFailure(res.status)) {
+        throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
+      }
+      return null
+    }
+    const data = await res.json()
+    return data?.payload || null
+  } catch (err) {
+    if (isUserFacingNetworkError(err)) throw err
+    throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
+  }
+}
+
+// Fetch month availability for a permitinyo permit. The API only accepts
+// whole-calendar-month ranges, so the selected date is expanded to its month.
+export async function getYosemiteAvailability(permitId, date) {
+  const [year, month] = date.split('-').map(Number)
+  const mm = String(month).padStart(2, '0')
+  const lastDay = new Date(year, month, 0).getDate()
+  const startDate = `${year}-${mm}-01`
+  const endDate = `${year}-${mm}-${lastDay}`
+  try {
+    const res = await fetch(
+      `/recgov/api/permitinyo/${permitId}/availabilityv2?start_date=${startDate}&end_date=${endDate}&commercial_acct=false`
+    )
+    if (!res.ok) {
+      if (isServerOrProxyFailure(res.status)) {
+        throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
+      }
+      return null
+    }
+    const data = await res.json()
+    if (data?.error) return null
+    return data?.payload || null
+  } catch (err) {
+    if (isUserFacingNetworkError(err)) throw err
+    throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
+  }
+}

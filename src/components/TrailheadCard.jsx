@@ -9,8 +9,29 @@ const GRADIENTS = [
   'from-cyan-700 to-teal-900',
 ]
 
-function Badge({ remaining, total, groupSize }) {
-  if (remaining === null)
+function formatReleaseDate(releaseDate) {
+  if (!releaseDate) return null
+  const d = new Date(releaseDate)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function Badge({ zone, groupSize }) {
+  const { status, remaining } = zone
+
+  if (status === 'no-quota')
+    return (
+      <span className="px-2.5 py-1 text-xs font-semibold bg-stone-200 text-stone-500 rounded-full">
+        Unavailable
+      </span>
+    )
+  if (status === 'not-released')
+    return (
+      <span className="px-2.5 py-1 text-xs font-semibold bg-sky-100 text-sky-700 rounded-full">
+        Not yet released
+      </span>
+    )
+  if (status === 'no-data' || remaining === null)
     return (
       <span className="px-2.5 py-1 text-xs font-medium bg-stone-100 text-stone-500 rounded-full">
         No data
@@ -35,16 +56,28 @@ function Badge({ remaining, total, groupSize }) {
   )
 }
 
-export default function TrailheadCard({ division, groupSize, permitId, selectedDate, imageUrl, gradientIndex }) {
-  const { name, description, remaining, total } = division
+export default function TrailheadCard({ zone, groupSize, permitId, selectedDate, imageUrl, gradientIndex }) {
+  const { name, description, remaining, total, status, releaseDate } = zone
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length]
-  const isFull = remaining === 0
+
+  const isUnavailable = status === 'no-quota'
+  const isNotReleased = status === 'not-released'
+  const isFull = status === 'open' && remaining === 0
+  const isDimmed = isUnavailable || isFull
+  const isBookable = !isUnavailable && !isNotReleased && !isFull
+
+  const releaseLabel = formatReleaseDate(releaseDate)
   const bookingUrl = `https://www.recreation.gov/permits/${permitId}/registration/detailed-availability?type=permit&date=${selectedDate}`
+
+  let ctaLabel = 'Book on Recreation.gov →'
+  if (isUnavailable) ctaLabel = 'No quota on this date'
+  else if (isNotReleased) ctaLabel = releaseLabel ? `Releases ${releaseLabel}` : 'Not yet released'
+  else if (isFull) ctaLabel = 'Sold Out'
 
   return (
     <div
       className={`rounded-2xl overflow-hidden shadow-sm border border-stone-200 bg-white flex flex-col transition-shadow duration-200 hover:shadow-md ${
-        isFull ? 'opacity-60' : ''
+        isDimmed ? 'opacity-60' : ''
       }`}
     >
       {/* Image / gradient header */}
@@ -63,7 +96,7 @@ export default function TrailheadCard({ division, groupSize, permitId, selectedD
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-2">
           <h3 className="text-white font-bold text-sm leading-snug drop-shadow">{name}</h3>
-          <Badge remaining={remaining} total={total} groupSize={groupSize} />
+          <Badge zone={zone} groupSize={groupSize} />
         </div>
       </div>
 
@@ -75,21 +108,30 @@ export default function TrailheadCard({ division, groupSize, permitId, selectedD
 
         {/* Stats row */}
         <div className="flex items-center gap-6">
-          {remaining !== null && (
+          {isNotReleased ? (
             <div>
-              <p className="text-xs text-stone-400 uppercase tracking-wide">Available</p>
-              <p
-                className={`text-2xl font-bold ${
-                  remaining === 0
-                    ? 'text-red-500'
-                    : remaining < groupSize
-                    ? 'text-amber-500'
-                    : 'text-green-600'
-                }`}
-              >
-                {remaining}
+              <p className="text-xs text-stone-400 uppercase tracking-wide">Remaining quota</p>
+              <p className="text-sm font-semibold text-sky-700">
+                Releases {releaseLabel || 'soon'}
               </p>
             </div>
+          ) : (
+            remaining !== null && (
+              <div>
+                <p className="text-xs text-stone-400 uppercase tracking-wide">Available</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    remaining === 0
+                      ? 'text-red-500'
+                      : remaining < groupSize
+                      ? 'text-amber-500'
+                      : 'text-green-600'
+                  }`}
+                >
+                  {remaining}
+                </p>
+              </div>
+            )
           )}
           {total !== null && (
             <div>
@@ -106,12 +148,12 @@ export default function TrailheadCard({ division, groupSize, permitId, selectedD
             target="_blank"
             rel="noopener noreferrer"
             className={`block w-full text-center py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              isFull
-                ? 'bg-stone-100 text-stone-400 pointer-events-none'
-                : 'bg-green-800 hover:bg-green-700 text-white'
+              isBookable
+                ? 'bg-green-800 hover:bg-green-700 text-white'
+                : 'bg-stone-100 text-stone-400 pointer-events-none'
             }`}
           >
-            {isFull ? 'Sold Out' : 'Book on Recreation.gov →'}
+            {ctaLabel}
           </a>
         </div>
       </div>
