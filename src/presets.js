@@ -42,6 +42,15 @@ export const PRESETS = [
     id: '445856',
     name: 'Hoover Wilderness Permits',
     apiType: 'permitinyo',
+    images: [
+      'https://cdn.recreation.gov/public/2020/03/05/14/44/445856_34f5b311-f22f-406a-af64-2e3712127b5e_700.webp',
+      'https://cdn.recreation.gov/public/2024/08/21/20/12/10291355_a46e45bf-25b2-4459-aa0c-ef1ec489ddc2_700.webp',
+      'https://cdn.recreation.gov/public/2023/10/15/20/58/232119_0a3f76e0-4b7d-4f04-bad7-a8d4611b518a_1440.webp',
+      'https://cdn.recreation.gov/public/2024/10/10/17/59/10291460_ad86a78d-4f76-45a0-a7b6-1bf38e1c81a9_700.webp',
+      'https://cdn.recreation.gov/public/2023/10/15/19/59/232090_fb018077-d1cf-48be-8778-675fada51ac0_700.webp',
+      'https://cdn.recreation.gov/public/2023/10/17/21/56/232117_eab8030d-df89-4f60-a875-5dc6329ec7a1_700.webp',
+      'https://cdn.recreation.gov/public/2023/03/01/21/17/232422_5dc5cf56-b39b-40cb-90c8-26737923bf51_700.webp',
+    ],
   },
 ]
 
