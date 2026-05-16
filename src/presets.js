@@ -52,6 +52,19 @@ export const PRESETS = [
       'https://cdn.recreation.gov/public/2023/03/01/21/17/232422_5dc5cf56-b39b-40cb-90c8-26737923bf51_700.webp',
     ],
   },
+  {
+    id: '233262',
+    name: 'Inyo National Forest Wilderness Permits',
+    apiType: 'permitinyo',
+    images: [
+      'https://cdn.recreation.gov/public/2018/09/14/22/16/233262_b3efb5ad-5762-4191-92c8-3b32e34babbb_700.webp',
+      'https://cdn.recreation.gov/public/2018/08/20/20/28/1064_f5c48c02-a077-4ce3-852e-22a5c6fe3735_700.webp',
+      'https://cdn.recreation.gov/public/2022/12/19/15/11/445860_cd511cad-5bc9-4cc2-9001-563e9e2f0bdb_700.webp',
+      'https://cdn.recreation.gov/public/2024/01/12/15/49/234311_9139f248-e77e-4108-b103-793666c027ab_700.webp',
+      'https://cdn.recreation.gov/public/2019/06/20/00/12/233907_5d9029b7-0d24-4263-90a6-9e357f87fb14_700.webp',
+      'https://cdn.recreation.gov/public/2024/01/11/23/00/232123_dec002bb-ae9e-4b25-915e-32b11bb74a78_700.webp',
+    ],
+  },
 ]
 
 export function getPreset(permitId) {
