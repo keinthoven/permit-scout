@@ -605,6 +605,36 @@ export const AREAS = [
   },
 
   {
+    id: 'rocky-mountain-np-wilderness',
+    name: 'Rocky Mountain National Park Wilderness',
+    state: 'CO',
+    region: 'Rocky Mountains',
+    managing: 'Rocky Mountain National Park (NPS)',
+    permitType: 'quota',
+    season: { start: 'May 1', end: 'Oct 31' },
+    tags: ['colorado', 'overnight', 'nps', 'rockies', 'popular'],
+    notes:
+      'Wilderness camping is by specific campsite (131 sites across 12 districts: Bear Lake, Wild Basin, Tonahutu, etc.) rather than entry trailhead. Single annual release on March 1 at 8:00 AM MT for trip dates May 1–Oct 31. Permits must be picked up in person at the Beaver Meadows or Kawuneeche Wilderness Office within 30 days of trip start. Bear canisters required Apr 1–Oct 31.',
+    subLocations: [
+      {
+        id: 'rmnp-overnight',
+        name: 'Wilderness Camping Permit',
+        recGovId: '4675320',
+        type: 'permit',
+        bookingWindow: {
+          type: 'seasonal-release',
+          releaseDate: 'March 1',
+          releaseTime: '08:00',
+          timezone: 'America/Denver',
+          coverage: 'May 1 – October 31 trip dates',
+          notes:
+            'Single annual release. Permits must be picked up in person at park Wilderness Office.',
+        },
+      },
+    ],
+  },
+
+  {
     id: 'weminuche-wilderness',
     name: 'Weminuche Wilderness',
     state: 'CO',
