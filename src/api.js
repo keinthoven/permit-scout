@@ -146,3 +146,50 @@ export async function getYosemiteAvailability(permitId, date) {
     throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
   }
 }
+
+// ─── permititinerary backend (RMNP-style per-campsite permits) ──────────────
+//
+// Rocky Mountain NP uses /api/permitcontent for metadata (same as Yosemite)
+// but availability is per-division: one HTTP call per campsite. There is no
+// bulk endpoint. Each division returns a month of {date: {total, remaining}}.
+
+// Fetch availability for a single division of a permititinerary permit.
+async function getPermitItineraryDivisionAvailability(permitId, divisionId, date) {
+  const [year, month] = date.split('-').map(Number)
+  const res = await fetch(
+    `/recgov/api/permititinerary/${permitId}/division/${divisionId}/availability/month?month=${month}&year=${year}`
+  )
+  if (!res.ok) {
+    if (isServerOrProxyFailure(res.status)) {
+      throw new Error('Unable to reach Recreation.gov right now. Please try again in a minute.')
+    }
+    return null
+  }
+  const data = await res.json()
+  return data?.payload || null
+}
+
+// Fan out per-division availability calls with a small concurrency cap.
+// Returns a { divisionId: payload | null } map; individual failures yield null
+// rather than aborting the whole scan.
+export async function getPermitItineraryAvailability(permitId, divisionIds, date, concurrency = 10) {
+  const results = {}
+  let cursor = 0
+
+  async function worker() {
+    while (cursor < divisionIds.length) {
+      const idx = cursor++
+      const divisionId = divisionIds[idx]
+      try {
+        results[divisionId] = await getPermitItineraryDivisionAvailability(permitId, divisionId, date)
+      } catch (err) {
+        if (isUserFacingNetworkError(err)) throw err
+        results[divisionId] = null
+      }
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, divisionIds.length) }, worker)
+  await Promise.all(workers)
+  return results
+}

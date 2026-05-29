@@ -8,8 +8,10 @@
 // (used when the permit's API carries no media of its own).
 //
 // `apiType` selects the Recreation.gov backend:
-//   - 'recgov'     — legacy /api/permits endpoints (the default)
-//   - 'permitinyo' — /api/permitcontent + /api/permitinyo (Yosemite-style)
+//   - 'recgov'          — legacy /api/permits endpoints (the default)
+//   - 'permitinyo'      — /api/permitcontent + /api/permitinyo (Yosemite-style)
+//   - 'permititinerary' — /api/permitcontent + per-division
+//                         /api/permititinerary (RMNP-style; one call per site)
 export const PRESETS = [
   {
     id: '233261',
@@ -64,6 +66,11 @@ export const PRESETS = [
       'https://cdn.recreation.gov/public/2019/06/20/00/12/233907_5d9029b7-0d24-4263-90a6-9e357f87fb14_700.webp',
       'https://cdn.recreation.gov/public/2024/01/11/23/00/232123_dec002bb-ae9e-4b25-915e-32b11bb74a78_700.webp',
     ],
+  },
+  {
+    id: '4675320',
+    name: 'Rocky Mountain National Park Wilderness Permits',
+    apiType: 'permititinerary',
   },
 ]
 

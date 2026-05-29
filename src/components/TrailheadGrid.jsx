@@ -50,11 +50,22 @@ export default function TrailheadGrid({
   const available = searched.filter((z) => z.status !== 'no-quota')
   const unavailable = searched.filter((z) => z.status === 'no-quota')
 
-  const availableForGroup = zones.filter(
-    (z) => z.status === 'open' && z.remaining !== null && z.remaining >= groupSize
+  // Site-based permits (RMNP) measure remaining in physical campsites, not
+  // entry slots — group-size math doesn't apply, so just count locations with
+  // any availability and label it accordingly.
+  const isSites = zones[0]?.quotaUnit === 'sites'
+  const availableForGroup = zones.filter((z) =>
+    z.status === 'open' &&
+    z.remaining !== null &&
+    (isSites ? z.remaining > 0 : z.remaining >= groupSize)
   ).length
   const totalZones = zones.length
-  const noun = showFilters ? 'entry points' : 'destination zones'
+  const noun = isSites
+    ? 'campsites'
+    : showFilters
+    ? 'entry points'
+    : 'destination zones'
+  const availabilityLabel = isSites ? 'with availability' : 'available for your group'
 
   const formattedDate = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
@@ -78,7 +89,7 @@ export default function TrailheadGrid({
         <div className="text-left sm:text-right">
           <span className="text-3xl font-bold text-green-700">{availableForGroup}</span>
           <span className="text-stone-500 text-sm">
-            {' '}of {totalZones} {noun} available for your group
+            {' '}of {totalZones} {noun} {availabilityLabel}
           </span>
         </div>
       </div>
@@ -90,7 +101,7 @@ export default function TrailheadGrid({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search entry points by name…"
+            placeholder={`Search ${noun} by name…`}
             className="w-full sm:max-w-sm h-[42px] px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
           />
         </div>
@@ -128,16 +139,55 @@ export default function TrailheadGrid({
       ) : available.length === 0 && unavailable.length === 0 ? (
         <div className="text-center py-16 text-stone-400">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="text-lg font-medium">No entry points match “{search.trim()}”.</p>
+          <p className="text-lg font-medium">No {noun} match “{search.trim()}”.</p>
         </div>
       ) : available.length === 0 ? (
         <div className="text-center py-16 text-stone-400">
           <p className="text-4xl mb-3">📅</p>
-          <p className="text-lg font-medium">No entry points are open for this date.</p>
+          <p className="text-lg font-medium">No {noun} are open for this date.</p>
           <p className="text-sm mt-1 max-w-md mx-auto">
             Permits release 24 weeks to 3 days before the entry date. Try a date at least 3 days out.
           </p>
         </div>
+      ) : isSites ? (
+        // Site-based permits (RMNP): group by starting-point district.
+        (() => {
+          const byDistrict = new Map()
+          available.forEach((z) => {
+            const key = z.district || 'Other'
+            if (!byDistrict.has(key)) byDistrict.set(key, [])
+            byDistrict.get(key).push(z)
+          })
+          let cardIndex = 0
+          return [...byDistrict.entries()]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([district, group]) => (
+              <section key={district} className="mb-8 last:mb-0">
+                <h3 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3">
+                  {district}{' '}
+                  <span className="text-stone-400 font-normal normal-case tracking-normal">
+                    · {group.length} {group.length === 1 ? 'campsite' : 'campsites'}
+                  </span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {group.map((zone) => {
+                    const i = cardIndex++
+                    return (
+                      <TrailheadCard
+                        key={zone.id}
+                        zone={zone}
+                        groupSize={groupSize}
+                        permitId={permitId}
+                        selectedDate={selectedDate}
+                        imageUrl={imageUrls.length > 0 ? imageUrls[i % imageUrls.length] : null}
+                        gradientIndex={i}
+                      />
+                    )
+                  })}
+                </div>
+              </section>
+            ))
+        })()
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {available.map((zone, i) => (
@@ -162,7 +212,7 @@ export default function TrailheadGrid({
             className="text-sm font-medium text-stone-500 hover:text-stone-700 transition-colors"
           >
             {showUnavailable ? '▾' : '▸'} {showUnavailable ? 'Hide' : 'Show'} {unavailable.length}{' '}
-            unavailable entry point{unavailable.length === 1 ? '' : 's'}
+            unavailable {unavailable.length === 1 ? noun.replace(/s$/, '') : noun}
           </button>
           {showUnavailable && (
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
