@@ -71,6 +71,15 @@ export const PRESETS = [
     id: '4675320',
     name: 'Rocky Mountain National Park Wilderness Permits',
     apiType: 'permititinerary',
+    images: [
+      'https://cdn.recreation.gov/public/2022/01/20/00/42/4675320_0b07a1ba-cf0d-4975-923e-458d91f009ee_700.webp',
+      'https://cdn.recreation.gov/public/2022/01/20/00/43/4675320_46104080-7772-493a-b21d-5a7460043855_700.webp',
+      'https://cdn.recreation.gov/public/2022/01/20/00/41/4675320_572255e9-8984-423c-9bf4-35c0bf9c0873_1440.webp',
+      'https://cdn.recreation.gov/public/2023/05/03/22/57/2907_b25776d5-5c0a-4200-9d97-dcd0b214e7bb_700.webp',
+      'https://cdn.recreation.gov/public/2025/07/10/22/34/2907_cb182371-26ab-47b5-aa9b-92be9e269ae2_700.webp',
+      'https://cdn.recreation.gov/public/2025/07/10/22/36/2907_26c55b82-f15d-426c-92ae-7e1a5f13354d_700.webp',
+      'https://cdn.recreation.gov/public/2022/05/26/16/55/2907_e128b6a0-e6e3-490d-8f2c-6d39d50df57c_1440.webp',
+    ],
   },
 ]
 
