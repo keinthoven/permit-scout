@@ -22,13 +22,13 @@ export const REGION_GRADIENTS = {
 }
 
 function CountdownPill({ daysUntil, urgency, status }) {
-  if (daysUntil == null) return null
-  const styles = URGENCY_STYLES[urgency]
   const base =
     'inline-block px-2 py-0.5 text-[11px] font-semibold rounded-full text-center leading-tight'
-  if (daysUntil < 0 || status === 'open-now') {
+  if (status === 'open-now' || (daysUntil != null && daysUntil < 0)) {
     return <span className={`${base} bg-emerald-200 text-emerald-900`}>Open now</span>
   }
+  if (daysUntil == null) return null
+  const styles = URGENCY_STYLES[urgency]
   if (daysUntil === 0) {
     return <span className={`${base} ${styles.badge}`}>Today</span>
   }
@@ -39,8 +39,13 @@ function CountdownPill({ daysUntil, urgency, status }) {
   )
 }
 
-function SubLocationRow({ sub, tripDate }) {
-  const result = computeBooking(sub.bookingWindow, tripDate ? new Date(tripDate) : null)
+function SubLocationRow({ sub, tripDate, seasonEnd }) {
+  const result = computeBooking(
+    sub.bookingWindow,
+    tripDate ? new Date(tripDate) : null,
+    new Date(),
+    seasonEnd
+  )
   const recGovUrl = sub.recGovId
     ? `https://www.recreation.gov/${sub.type === 'campground' ? 'camping/campgrounds' : 'permits'}/${sub.recGovId}`
     : null
@@ -123,7 +128,12 @@ export default function AreaCard({ area, tripDate }) {
       {/* Sub-locations — the actionable booking info */}
       <div className="px-5 py-4 flex flex-col gap-2 flex-1">
         {subLocations.map((sub) => (
-          <SubLocationRow key={sub.id} sub={sub} tripDate={tripDate} />
+          <SubLocationRow
+            key={sub.id}
+            sub={sub}
+            tripDate={tripDate}
+            seasonEnd={season?.end}
+          />
         ))}
       </div>
     </div>
@@ -133,7 +143,12 @@ export default function AreaCard({ area, tripDate }) {
 export function areaUrgency(area, tripDate) {
   const URGENCY_RANK = { critical: 0, soon: 1, later: 2, none: 3 }
   return area.subLocations.reduce((best, sub) => {
-    const r = computeBooking(sub.bookingWindow, tripDate ? new Date(tripDate) : null)
+    const r = computeBooking(
+      sub.bookingWindow,
+      tripDate ? new Date(tripDate) : null,
+      new Date(),
+      area.season?.end
+    )
     return URGENCY_RANK[r.urgency] < URGENCY_RANK[best] ? r.urgency : best
   }, 'none')
 }
