@@ -1,7 +1,8 @@
-// Normalizes availability data from both Recreation.gov permit backends into a
+// Normalizes availability data from all Recreation.gov permit backends into a
 // single `zone` shape the Permit Checker UI renders:
 //
-//   { id, code, name, description, remaining, total, status, releaseDate }
+//   { id, code, name, description, remaining, total, status, releaseDate,
+//     quotaUnit, capacityLabel? }
 //
 // status:
 //   'open'         — released; remaining/total are live counts
@@ -9,6 +10,12 @@
 //                    (carries releaseDate)
 //   'no-quota'     — no quota for the selected date (permitinyo omits the cell)
 //   'no-data'      — availability not reported (legacy /api/permits backend)
+//
+// quotaUnit:
+//   'entries' — total/remaining are daily entry slots for groups (Yosemite,
+//               Inyo, Desolation, Central Cascades — the default).
+//   'sites'   — total/remaining are physical campsites at a fixed location
+//               (RMNP). Each site has its own capacity; see capacityLabel.
 
 // Legacy /api/permits backend (Desolation, Central Cascades, …).
 export function normalizeRecgov(availability, divisions, selectedDate) {
@@ -33,6 +40,7 @@ export function normalizeRecgov(availability, divisions, selectedDate) {
       total: dayData?.total ?? null,
       status: remaining === null ? 'no-data' : 'open',
       releaseDate: null,
+      quotaUnit: 'entries',
     }
   })
 }
@@ -86,9 +94,91 @@ export function normalizeYosemite(content, availability, selectedDate) {
       status,
       releaseDate,
       viewOrder: div.view_order ?? 9999,
+      quotaUnit: 'entries',
     })
   }
 
   zones.sort((a, b) => a.viewOrder - b.viewOrder || a.name.localeCompare(b.name))
+  return zones
+}
+
+// Extract a human-readable capacity caption from an RMNP division description.
+// Source descriptions contain HTML like:
+//   "<p>Number of Sites: 2 (1-7 people per site)</p>"
+//   "<p>Number of Sites:  1 Group site (8-12 people)</p>"
+// We return just the parenthetical capacity (e.g. "1–7 people per site").
+function extractRmnpCapacity(description) {
+  if (!description) return null
+  // [^(<]* keeps us inside the same "<p>Number of Sites: ...</p>" element —
+  // some divisions omit the parenthetical, and without the < bound we'd
+  // wander into an Elevation paragraph further down.
+  const match = description.match(/Number of Sites:\s*\d+[^(<]*\(([^)]+)\)/i)
+  if (!match) return null
+  return match[1].trim().replace(/(\d)-(\d)/g, '$1–$2')
+}
+
+// permititinerary backend (RMNP wilderness camping).
+//
+// `perDivisionAvailability` is the { divisionId: payload | null } map produced
+// by getPermitItineraryAvailability. Each payload's quota_type_maps has one
+// usage map (typically ConstantQuotaUsageDaily) keyed by date.
+export function normalizeRmnp(content, perDivisionAvailability, selectedDate) {
+  const divisions = content?.divisions || {}
+  const zones = []
+
+  for (const [internalId, div] of Object.entries(divisions)) {
+    if (div.is_hidden) continue
+
+    const payload = perDivisionAvailability?.[internalId]
+    let status, remaining, total, releaseDate
+
+    if (!payload) {
+      // Either the call failed or no quota maps exist for this division.
+      status = 'no-data'
+      remaining = null
+      total = null
+      releaseDate = null
+    } else {
+      const quotaMaps = payload.quota_type_maps || {}
+      const firstMap = Object.values(quotaMaps)[0] || {}
+      const cell = firstMap[selectedDate]
+      if (!cell) {
+        status = 'no-quota'
+        remaining = null
+        total = null
+        releaseDate = null
+      } else {
+        remaining = cell.remaining ?? null
+        total = cell.total ?? null
+        status = 'open'
+        releaseDate = null
+      }
+    }
+
+    const isGroupSite = /\bGroup\b/i.test(div.name || '')
+
+    zones.push({
+      id: internalId,
+      code: div.code || internalId,
+      name: div.name || div.code || internalId,
+      description: '',
+      remaining,
+      total,
+      status,
+      releaseDate,
+      district: div.district || null,
+      quotaUnit: 'sites',
+      capacityLabel: extractRmnpCapacity(div.description),
+      isGroupSite,
+      viewOrder: div.view_order ?? 9999,
+    })
+  }
+
+  // Group by district, then by name within district.
+  zones.sort(
+    (a, b) =>
+      (a.district || '').localeCompare(b.district || '') ||
+      a.name.localeCompare(b.name)
+  )
   return zones
 }

@@ -9,9 +9,10 @@ import {
   getFacilityMedia,
   getYosemiteContent,
   getYosemiteAvailability,
+  getPermitItineraryAvailability,
 } from '../api'
 import { getPreset } from '../presets'
-import { normalizeRecgov, normalizeYosemite } from '../normalize'
+import { normalizeRecgov, normalizeYosemite, normalizeRmnp } from '../normalize'
 
 export default function PermitCheckerPage() {
   const [permitInput, setPermitInput] = useState('233261')
@@ -59,6 +60,35 @@ export default function PermitCheckerPage() {
           mapEmbed: preset.mapEmbed || null,
           showFilters: true,
           accessible: !!availability,
+        })
+        setActivePermitId(permitId)
+      } else if (preset?.apiType === 'permititinerary') {
+        const content = await getYosemiteContent(permitId)
+        if (!content) {
+          setError('Permit not found. Double-check your permit ID.')
+          return
+        }
+
+        const visibleIds = Object.entries(content.divisions || {})
+          .filter(([, div]) => !div.is_hidden)
+          .map(([id]) => id)
+
+        const perDivision = await getPermitItineraryAvailability(
+          permitId,
+          visibleIds,
+          selectedDate
+        )
+
+        const anyData = Object.values(perDivision).some((v) => v !== null)
+
+        setResults({
+          zones: anyData ? normalizeRmnp(content, perDivision, selectedDate) : null,
+          permitName: content.name,
+          media: (preset.images || []).map((url) => ({ url })),
+          mapImage: preset.mapImage || null,
+          mapEmbed: preset.mapEmbed || null,
+          showFilters: true,
+          accessible: anyData,
         })
         setActivePermitId(permitId)
       } else {
