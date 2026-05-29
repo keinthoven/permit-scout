@@ -123,19 +123,53 @@ function calcLottery(bw, tripDate, today) {
 }
 
 // ─── Seasonal release ──────────────────────────────────────────────────────
-function calcSeasonalRelease(bw, tripDate, today) {
-  const parsed = parseHumanDate(bw.releaseDate, today)
+function calcSeasonalRelease(bw, tripDate, today, seasonEnd) {
+  const currentYear = today.getFullYear()
+  const releaseThisYear = parseHumanDateForYear(bw.releaseDate, currentYear)
+  const seasonEndThisYear = parseHumanDateForYear(seasonEnd, currentYear)
+  const sod = startOfDay(today)
+
+  // Are we currently inside the live booking window? (release passed this
+  // year AND the season hasn't ended yet)
+  if (
+    releaseThisYear &&
+    seasonEndThisYear &&
+    sod >= releaseThisYear &&
+    sod <= seasonEndThisYear
+  ) {
+    const timePart = bw.releaseTime
+      ? ` at ${formatTimeWithTz(bw.releaseTime, bw.timezone, releaseThisYear)}`
+      : ''
+    return {
+      type: 'seasonal-release',
+      status: 'open-now',
+      bookOnLabel: 'Open now',
+      bookOnDetail: `Released ${bw.releaseDate}${timePart}${bw.coverage ? ` · Covers ${bw.coverage}` : ''}`,
+      daysUntil: null,
+      urgency: 'none',
+    }
+  }
+
+  // Otherwise count down to the next release.
+  // - If this year's release is still ahead, that's the target.
+  // - If it has passed and the season has ended, target is next year's release.
+  let nextRelease = null
+  if (releaseThisYear && sod < releaseThisYear) {
+    nextRelease = releaseThisYear
+  } else if (releaseThisYear) {
+    nextRelease = parseHumanDateForYear(bw.releaseDate, currentYear + 1)
+  }
+
   let daysUntil = null
   let status = 'upcoming'
-  if (parsed) {
-    daysUntil = daysBetween(today, parsed)
-    if (daysUntil < 0) status = 'open-now'
+  if (nextRelease) {
+    daysUntil = daysBetween(today, nextRelease)
   } else {
     status = 'unknown'
   }
 
   const timePart = bw.releaseTime
-    ? ` at ${formatTimeWithTz(bw.releaseTime, bw.timezone, parsed || today)}`
+    ? ` at ${formatTimeWithTz(bw.releaseTime, bw.timezone, nextRelease || today)}`
     : ''
 
   return {
@@ -164,19 +198,35 @@ function calcSelfIssue() {
 // "Early April". Returns a Date in the current or next year (whichever is upcoming),
 // or null if we can't parse it.
 function parseHumanDate(str, today) {
-  if (!str) return null
-  // Try to find "Month Day"
-  const match = str.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i)
-  if (!match) return null
-  const month = new Date(`${match[1]} 1, 2000`).getMonth()
-  const day = parseInt(match[2], 10)
-
-  const thisYear = new Date(today.getFullYear(), month, day)
+  const parts = extractMonthDay(str)
+  if (!parts) return null
+  const thisYear = new Date(today.getFullYear(), parts.month, parts.day)
   if (thisYear >= startOfDay(today)) return thisYear
-  return new Date(today.getFullYear() + 1, month, day)
+  return new Date(today.getFullYear() + 1, parts.month, parts.day)
 }
 
-export function computeBooking(bookingWindow, tripDate = null, today = new Date()) {
+// Pin a human date to a specific year (used when we need both this year's and
+// next year's instance of the same release date).
+function parseHumanDateForYear(str, year) {
+  const parts = extractMonthDay(str)
+  if (!parts) return null
+  return new Date(year, parts.month, parts.day)
+}
+
+// Extract month + day from strings like "February 15", "Late January (~Jan 28)",
+// "Oct 31". Accepts both full and abbreviated month names.
+function extractMonthDay(str) {
+  if (!str) return null
+  const match = str.match(
+    /(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(\d{1,2})/i
+  )
+  if (!match) return null
+  const month = new Date(`${match[1]} 1, 2000`).getMonth()
+  if (Number.isNaN(month)) return null
+  return { month, day: parseInt(match[2], 10) }
+}
+
+export function computeBooking(bookingWindow, tripDate = null, today = new Date(), seasonEnd = null) {
   if (!bookingWindow) {
     return {
       type: 'unknown',
@@ -194,7 +244,7 @@ export function computeBooking(bookingWindow, tripDate = null, today = new Date(
     case 'lottery':
       return calcLottery(bookingWindow, tripDate, today)
     case 'seasonal-release':
-      return calcSeasonalRelease(bookingWindow, tripDate, today)
+      return calcSeasonalRelease(bookingWindow, tripDate, today, seasonEnd)
     case 'self-issue':
       return calcSelfIssue(bookingWindow)
     default:
