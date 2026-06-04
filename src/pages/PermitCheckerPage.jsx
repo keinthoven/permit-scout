@@ -183,10 +183,6 @@ export default function PermitCheckerPage() {
           </p>
         </div>
       )}
-
-      <footer className="mt-16 pb-4 text-center text-xs text-stone-400">
-        Heads up: Permit Checker works with trailhead- and entry-point-based wilderness permits — like Yosemite, Desolation, and the Central Cascades — where Recreation.gov has you choose a starting zone.
-      </footer>
     </main>
   )
 }
